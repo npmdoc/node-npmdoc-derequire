@@ -1,0 +1,169 @@
+<html><head></head><body><div class="apidocDiv">
+<style>
+/*csslint
+*/
+.apidocDiv {
+    background: #fff;
+    font-family: Arial, Helvetica, sans-serif;
+}
+.apidocDiv a[href] {
+    color: #33f;
+    font-weight: bold;
+    text-decoration: none;
+}
+.apidocDiv a[href]:hover {
+    text-decoration: underline;
+}
+.apidocCodeCommentSpan {
+    background: #bbf;
+    color: #000;
+    display: block;
+}
+.apidocCodeKeywordSpan {
+    color: #d00;
+    font-weight: bold;
+}
+.apidocCodePre {
+    background: #eef;
+    border: 1px solid;
+    color: #777;
+    padding: 5px;
+    white-space: pre-wrap;
+}
+.apidocFooterDiv {
+    margin-top: 20px;
+    text-align: center;
+}
+.apidocModuleLi {
+    margin-top: 10px;
+}
+.apidocSectionDiv {
+    border-top: 1px solid;
+    margin-top: 20px;
+}
+.apidocSignatureSpan {
+    color: #777;
+    font-weight: bold;
+}
+</style>
+<h1>api documentation for
+    <a href="https://github.com/calvinmetcalf/derequire">derequire (v2.0.6)</a>
+</h1>
+<h4>remove requires</h4>
+<div class="apidocSectionDiv"><a href="#apidoc.tableOfContents" id="apidoc.tableOfContents"><h1>table of contents</h1></a><ol>
+
+    <li class="apidocModuleLi"><a href="#apidoc.module.derequire">module derequire</a><ol>
+
+        <li>
+
+            <a class="apidocElementLiA" href="#apidoc.element.derequire.derequire">
+            function <span class="apidocSignatureSpan"></span>derequire
+            <span class="apidocSignatureSpan">(code, tokenTo, tokenFrom)</span>
+            </a>
+
+        </li>
+
+    </ol></li>
+
+</ol></div>
+
+<div class="apidocSectionDiv">
+<h1><a href="#apidoc.module.derequire" id="apidoc.module.derequire">module derequire</a></h1>
+
+
+    <h2>
+        <a href="#apidoc.element.derequire.derequire" id="apidoc.element.derequire.derequire">
+        function <span class="apidocSignatureSpan"></span>derequire
+        <span class="apidocSignatureSpan">(code, tokenTo, tokenFrom)</span>
+        </a>
+    </h2>
+    <ul>
+    <li>description and source-code<pre class="apidocCodePre">function rename(code, tokenTo, tokenFrom) {
+
+  var tokens;
+  if (!Array.isArray(tokenTo)) {
+    tokens = [{
+      from: tokenFrom || 'require',
+      to: tokenTo || '_dereq_'
+    }];
+  } else {
+    tokens = tokenTo;
+  }
+
+  tokens.forEach(function(token) {
+    if (token.to.length !== token.from.length) {
+      throw new Error('"' + token.to + '" and "' + token.from + '" must be the same length');
+    }
+  });
+
+  if (tokens.length === 1 &amp;&amp;
+      tokens[0].from === 'require' &amp;&amp;
+      !requireRegexp.test(code)) {
+    return code;
+  }
+
+  var ast;
+  try {
+    ast = acorn.parse(code, {
+      ecmaVersion: 6,
+      ranges: true,
+      allowReturnOutsideFunction: true
+    });
+  } catch(err) {
+    // this should probably log something and/or exit violently
+    return code;
+  }
+
+  //
+  // heavily inspired by https://github.com/estools/esshorten
+  //
+
+  code = String(code).split('');
+
+  var manager = escope.analyze(ast, {optimistic: true, ecmaVersion: 6});
+
+  for (var i = 0, iz = manager.scopes.length; i &lt; iz; i++) {
+    var scope = manager.scopes[i];
+
+    for (var j = 0, jz = scope.variables.length; j &lt; jz; j++) {
+      var variable = scope.variables[j];
+
+      if (variable.tainted || variable.identifiers.length === 0) {
+        continue;
+      }
+
+      for (var k = 0, kz = tokens.length; k &lt; kz; k++) {
+        var token = tokens[k];
+
+        if (variable.name !== token.from) {
+          continue;
+        }
+
+        for (var l = 0, lz = variable.identifiers.length; l &lt; lz; l++) {
+          var def = variable.identifiers[l];
+          write(code, token.to, def.range[0]);
+        }
+
+        for (var m = 0, mz = variable.references.length; m &lt; mz; m++) {
+          var ref = variable.references[m];
+          write(code, token.to, ref.identifier.range[0]);
+        }
+      }
+    }
+  }
+
+  return code.join('');
+}</pre></li>
+    <li>example usage<pre class="apidocCodePre">n/a</pre></li>
+    </ul>
+
+
+</div>
+
+<div class="apidocFooterDiv">
+    [ this document was created with
+    <a href="https://github.com/kaizhu256/node-utility2" target="_blank">utility2</a>
+    ]
+</div>
+</div>
+</body></html>
